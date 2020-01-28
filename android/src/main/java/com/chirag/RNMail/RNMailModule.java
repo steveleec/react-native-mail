@@ -1,5 +1,6 @@
 package com.chirag.RNMail;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -15,6 +16,8 @@ import com.facebook.react.bridge.Callback;
 
 import java.util.List;
 import java.io.File;
+import java.net.URI;
+import static java.lang.System.out;
 
 /**
  * NativeModule that allows JS to open emails sending apps chooser.
@@ -84,13 +87,27 @@ public class RNMailModule extends ReactContextBaseJavaModule {
       i.putExtra(Intent.EXTRA_BCC, readableArrayToStringArray(bccRecipients));
     }
 
+    Uri uri = null;
     if (options.hasKey("attachment") && !options.isNull("attachment")) {
       ReadableMap attachment = options.getMap("attachment");
       if (attachment.hasKey("path") && !attachment.isNull("path")) {
         String path = attachment.getString("path");
         File file = new File(path);
-        Uri p = Uri.fromFile(file);
-        i.putExtra(Intent.EXTRA_STREAM, p);
+
+        String provider = reactContext.getApplicationContext().getPackageName() + ".provider";
+
+        uri = FileProvider.getUriForFile(reactContext, provider, file);
+
+        List<ResolveInfo> resolvedIntentActivities = reactContext.getPackageManager().queryIntentActivities(i,
+            PackageManager.MATCH_DEFAULT_ONLY);
+        for (ResolveInfo resolvedIntentInfo : resolvedIntentActivities) {
+          String packageName = resolvedIntentInfo.activityInfo.packageName;
+          reactContext.grantUriPermission(packageName, uri,
+              Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        i.putExtra(Intent.EXTRA_STREAM, uri);
+
       }
     }
 
