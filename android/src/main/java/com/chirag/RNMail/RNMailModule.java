@@ -7,6 +7,8 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.text.Html;
 
+import androidx.core.content.FileProvider;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
